@@ -1,6 +1,6 @@
 function hold_en_init_xblock(blk, varargin)
 
-defaults = {'hold_period', 2, 'explicit_clk_rate', 'off', 'input_clk_period', 1, 'counter_out', 'off'};
+defaults = {'hold_period', 2, 'explicit_clk_rate', 'off', 'input_clk_period', 1, 'extra_delay', 0,'counter_out', 'off'};
 
 
 hold_period = get_var('hold_period', 'defaults', defaults, varargin{:});
@@ -8,6 +8,7 @@ explicit_clk_rate = get_var('explicit_clk_rate', 'defaults', defaults, varargin{
     % when this is off, infer clock rate from input, then input_clk_period is pratically disabled
 input_clk_period = get_var('input_clk_period', 'defaults', defaults, varargin{:});
     % simulation only 
+extra_delay = get_var('extra_delay', 'defaults', defaults, varargin{:});
 counter_out = get_var('counter_out', 'defaults', defaults, varargin{:});
 
 
@@ -43,7 +44,11 @@ xlsub1_Constant = xBlock(struct('source', 'Constant', 'name', 'Constant'), ...
                          {}, ...
                          {xlsub1_Constant_out1});
 
-                     
+constant_delay_out = xSignal('constant_delay_out');
+constant_delay = xBlock(struct('source', 'Delay', 'name', 'constant_delay'), ...
+			struct('latency', extra_delay), ...
+			{xlsub1_Constant_out1}, ...
+			{constant_delay_out});                     
                      
 xlsub1_Logical_out1 = xSignal('xlsub1_Logical_out1');
 % block: untitled/Counter1
@@ -74,6 +79,11 @@ else
                              {xlsub1_Counter1_out1});
 end
 
+counter_delay_out = xSignal('counter_delay_out');
+counter_delay = xBlock(struct('source', 'Delay', 'name', 'counter_delay'), ...
+			struct('latency', extra_delay), ...
+			{xlsub1_Counter1_out1}, ...
+			{counter_delay_out});	
 
 % block: untitled/Logical
 xlsub1_Relational_out1 = xSignal('xlsub1_Relational_out1');
@@ -87,19 +97,20 @@ xlsub1_Logical = xBlock(struct('source', 'Logical', 'name', 'Logical'), ...
 xlsub1_Relational = xBlock(struct('source', 'Relational', 'name', 'Relational'), ...
                            struct('mode', 'a=b', ...
                                   'latency', 0), ...
-                           {xlsub1_Counter1_out1, xlsub1_Constant_out1}, ...
+                           {counter_delay_out, constant_delay_out}, ...
                            {xlsub1_Relational_out1});
 
 
 xConnector(en_out, xlsub1_Logical_out1);
 if strcmp(counter_out , 'on')
-    xConnector(counter_outport, xlsub1_Counter1_out1);
+    xConnector(counter_outport, counter_delay_out);
 end
 
 
 if ~isempty(blk) && ~strcmp(blk(1),'/')
     clean_blocks(blk);
-    fmtstr=sprintf('hold period: %d\nexplicit clk period:%s , input clk period:%d',hold_period, explicit_clk_rate, input_clk_period);
+    fmtstr=sprintf('hold period: %d\nexplicit clk period:%s , input clk period:%d\n extra latency: %d', ...
+        hold_period, explicit_clk_rate, input_clk_period,extra_delay);
     set_param(blk,'AttributesFormatString',fmtstr);
 end
 
