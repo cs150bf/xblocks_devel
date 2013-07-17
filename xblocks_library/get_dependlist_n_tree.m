@@ -19,7 +19,7 @@
 %   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               %
 %                                                                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function dependlist = get_dependlist(blk_name, varargin)
+function [dependlist, tree] = get_dependlist_n_tree(blk_name, varargin)
 
 
 numvarargs = length(varargin);
@@ -61,17 +61,17 @@ if ismember('-verbose', varargin)
         disp('--------------');
     else
         disp('***********************************************************************');
-        disp('get_depndlist():');
+        disp('get_depndlist_n_tree():');
         disp('---- Running with blk_name only:');
         disp('     default depth = 0');
         disp('     get all subblocks of the target block (down to any level)');
         disp('     return a cell array of the _init_xblock.m files of those blocks');
         disp('---- Running with extra parameter ''-super'' (and without ''-recursive''): ');
         disp('     get all blocks that *directly* depend on the target block');
-        disp('     return a cell array of the _init_xblock.m files of those blocks');
+        disp('     return [a cell array of the _init_xblock.m files of those blocks, a cell array of the trees/branches of the relationships]');
         disp('---- Running with extra parameter ''-super'' and ''-recursive'': ');
         disp('     get all blocks that *directly* and *indirectly* depend on the target block');
-        disp('     return a cell array of the _init_xblock.m files of those blocks');
+        disp('     return [a cell array of the _init_xblock.m files of those blocks, a cell array of the trees/branches of the relationships]');
         disp(' ');
         disp('See also: add_to_subblk_list(), rm_from_subblk_list(), rename_blk()');
         disp(' ');
